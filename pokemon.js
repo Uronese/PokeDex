@@ -1,8 +1,6 @@
 const MAX_POKEMON = 151;
 const listWrapper = document.querySelector(".list-wrapper");
 const searchInput = document.querySelector("#search-input");
-const numberFilter = document.querySelector("#number");
-const nameFilter = document.querySelector("#name");
 const overlay = document.getElementById("pokemon-overlay");
 const overlayContent = document.getElementById("pokemon-details");
 const closeBtn = document.querySelector(".close-btn");
@@ -34,12 +32,11 @@ fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON}`)
   .then((response) => response.json())
   .then((data) => {
     allPokemons = data.results;
-    allPokemons.sort((a, b) => {
-      const idA = parseInt(a.url.split("/")[6]);
-      const idB = parseInt(b.url.split("/")[6]);
-      return idA - idB;
-    });
-    displayPokemons(allPokemons);
+    return Promise.all(allPokemons.map(pokemon => fetchPokemonDataBeforeRedirect(pokemon.url.split("/")[6])));
+  })
+  .then((detailedPokemons) => {
+    detailedPokemons.sort((a, b) => a.pokemon.id - b.pokemon.id);
+    displayPokemons(detailedPokemons);
   });
 
 async function fetchPokemonDataBeforeRedirect(id) {
@@ -58,12 +55,11 @@ async function fetchPokemonDataBeforeRedirect(id) {
 function displayPokemons(pokemons) {
   listWrapper.innerHTML = "";
 
-  pokemons.forEach(async (pokemon) => {
-    const pokemonID = pokemon.url.split("/")[6];
+  pokemons.forEach((data) => {
+    const pokemonID = data.pokemon.id;
     const listItem = document.createElement("div");
     listItem.className = "list-item";
 
-    const data = await fetchPokemonDataBeforeRedirect(pokemonID);
     const pokemonTypes = data.pokemonTypes;
 
     listItem.innerHTML = `
@@ -71,21 +67,18 @@ function displayPokemons(pokemons) {
             <p class="caption-fonts"><b>#${pokemonID}<b></p>
         </div>
         <div class="img-wrap">
-            <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemon.name}" />
+            <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${data.pokemon.name}" />
         </div>
         <div class="name-wrap">
-            <p class="body3-fonts"><b>${pokemon.name}<b></p>
+            <p class="body3-fonts"><b>${data.pokemon.name}<b></p>
         </div>
         <div class="type-wrap">
             ${pokemonTypes.map(type => `<span class="badge" style="background-color: ${typeColors[type]};">${type}</span>`).join(' ')}
         </div>
     `;
 
-    listItem.addEventListener("click", async () => {
-      const data = await fetchPokemonDataBeforeRedirect(pokemonID);
-      if (data) {
-        openOverlay(data.pokemon, data.pokemonSpecies);
-      }
+    listItem.addEventListener("click", () => {
+      openOverlay(data.pokemon, data.pokemonSpecies);
     });
 
     listWrapper.appendChild(listItem);
@@ -121,7 +114,7 @@ function openOverlay(pokemon, pokemonSpecies) {
     const prevButton = overlayContent.querySelector(".prev-btn");
     const nextButton = overlayContent.querySelector(".next-btn");
   
-    const currentIndex = allPokemons.findIndex(p => p.url.split("/")[6] == pokemon.id);
+    const currentIndex = allPokemons.findIndex(p => p.pokemon.id == pokemon.id);
   
     if (currentIndex === 0) {
       prevButton.style.display = "none";
@@ -139,9 +132,9 @@ function openOverlay(pokemon, pokemonSpecies) {
   }
   
   function navigatePokemon(currentId, direction) {
-    const currentIndex = allPokemons.findIndex(pokemon => pokemon.url.split("/")[6] == currentId);
+    const currentIndex = allPokemons.findIndex(pokemon => pokemon.pokemon.id == currentId);
     const newIndex = (currentIndex + direction + allPokemons.length) % allPokemons.length;
-    const newPokemonID = allPokemons[newIndex].url.split("/")[6];
+    const newPokemonID = allPokemons[newIndex].pokemon.id;
   
     fetchPokemonDataBeforeRedirect(newPokemonID).then(data => {
       if (data) {
@@ -171,8 +164,8 @@ function openOverlay(pokemon, pokemonSpecies) {
     }
   
     const filteredPokemons = allPokemons.filter(pokemon => {
-      const pokemonID = pokemon.url.split("/")[6];
-      const pokemonName = pokemon.name.toLowerCase();
+      const pokemonID = pokemon.pokemon.id.toString();
+      const pokemonName = pokemon.pokemon.name.toLowerCase();
       return pokemonID.includes(searchTerm) || pokemonName.includes(searchTerm);
     });
     displayPokemons(filteredPokemons);
