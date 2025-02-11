@@ -6,28 +6,27 @@ const overlayContent = document.getElementById("pokemon-details");
 const closeBtn = document.querySelector(".close-btn");
 
 const typeColors = {
-    fire: "#F08030",
-    water: "#6890F0",
-    grass: "#78C850",
-    electric: "#F8D030",
-    ice: "#98D8D8",
-    fighting: "#C03028",
-    poison: "#A040A0",
-    ground: "#E0C068",
-    flying: "#A890F0",
-    psychic: "#F85888",
-    bug: "#A8B820",
-    rock: "#B8A038",
-    ghost: "#705898",
-    dragon: "#7038F8",
-    dark: "#705848",
-    steel: "#B8B8D0",
-    fairy: "#EE99AC",
-    normal: "#A8A878"
+  fire: "#F08030",
+  water: "#6890F0",
+  grass: "#78C850",
+  electric: "#F8D030",
+  ice: "#98D8D8",
+  fighting: "#C03028",
+  poison: "#A040A0",
+  ground: "#E0C068",
+  flying: "#A890F0",
+  psychic: "#F85888",
+  bug: "#A8B820",
+  rock: "#B8A038",
+  ghost: "#705898",
+  dragon: "#7038F8",
+  dark: "#705848",
+  steel: "#B8B8D0",
+  fairy: "#EE99AC",
+  normal: "#A8A878"
 };
 
 let allPokemons = [];
-
 fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON}`)
   .then((response) => response.json())
   .then((data) => {
@@ -36,6 +35,7 @@ fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON}`)
   })
   .then((detailedPokemons) => {
     detailedPokemons.sort((a, b) => a.pokemon.id - b.pokemon.id);
+    allPokemons = detailedPokemons;
     displayPokemons(detailedPokemons);
   });
 
@@ -54,132 +54,176 @@ async function fetchPokemonDataBeforeRedirect(id) {
 
 function displayPokemons(pokemons) {
   listWrapper.innerHTML = "";
+  pokemons.forEach((data) => createPokemonListItem(data));
+}
 
-  pokemons.forEach((data) => {
-    const pokemonID = data.pokemon.id;
-    const listItem = document.createElement("div");
-    listItem.className = "list-item";
+function createPokemonListItem(data) {
+  const pokemonID = data.pokemon.id;
+  const listItem = document.createElement("div");
+  listItem.className = "list-item";
+  const pokemonTypes = data.pokemonTypes;
+  const pokemonName = capitalizeFirstLetter(data.pokemon.name);
 
-    const pokemonTypes = data.pokemonTypes;
+  listItem.innerHTML = generatePokemonListItemHTML(pokemonID, pokemonName, pokemonTypes, data.pokemon.name);
 
-    listItem.innerHTML = `
-        <div class="number-wrap">
-            <p class="caption-fonts"><b>#${pokemonID}<b></p>
-        </div>
-        <div class="img-wrap">
-            <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${data.pokemon.name}" />
-        </div>
-        <div class="name-wrap">
-            <p class="body3-fonts"><b>${data.pokemon.name}<b></p>
-        </div>
-        <div class="type-wrap">
-            ${pokemonTypes.map(type => `<span class="badge" style="background-color: ${typeColors[type]};">${type}</span>`).join(' ')}
-        </div>
-    `;
+  listItem.addEventListener("click", () => openOverlay(data.pokemon, data.pokemonSpecies));
+  listWrapper.appendChild(listItem);
+}
 
-    listItem.addEventListener("click", () => {
-      openOverlay(data.pokemon, data.pokemonSpecies);
-    });
-
-    listWrapper.appendChild(listItem);
-  });
+function generatePokemonListItemHTML(pokemonID, pokemonName, pokemonTypes, pokemonAltName) {
+  return `
+    <div class="number-wrap">
+      <p class="caption-fonts"><b>#${pokemonID}<b></p>
+    </div>
+    <div class="img-wrap">
+      <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemonAltName}" />
+    </div>
+    <div class="name-wrap">
+      <p class="body3-fonts"><b>${pokemonName}<b></p>
+    </div>
+    <div class="type-wrap">
+      ${pokemonTypes.map(createTypeBadge).join(' ')}
+    </div>
+  `;
 }
 
 function openOverlay(pokemon, pokemonSpecies) {
-    const pokemonType = pokemon.types[0].type.name;
-    const backgroundColor = typeColors[pokemonType];
-  
-    overlayContent.innerHTML = `
-      <span class="close-btn">&times;</span>
-      <h2>${pokemon.name}</h2>
-      <div class="img-wrap">
-        <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemon.id}.svg" alt="${pokemon.name}" />
-      </div>
-      <p>Height: ${pokemon.height}</p>
-      <p>Weight: ${pokemon.weight}</p>
-      <p>Base Experience: ${pokemon.base_experience}</p>
-      <p>Species: ${pokemonSpecies.name}</p>
-      <button class="prev-btn">&larr;</button>
-      <button class="next-btn">&rarr;</button>
-    `;
-  
-    overlayContent.style.backgroundColor = backgroundColor;
-    overlay.style.display = "flex";
-  
-    const closeButton = overlayContent.querySelector(".close-btn");
-    closeButton.addEventListener("click", () => {
-      overlay.style.display = "none";
-    });
-  
-    const prevButton = overlayContent.querySelector(".prev-btn");
-    const nextButton = overlayContent.querySelector(".next-btn");
-  
-    const currentIndex = allPokemons.findIndex(p => p.pokemon.id == pokemon.id);
-  
-    if (currentIndex === 0) {
-      prevButton.style.display = "none";
-    } else {
-      prevButton.style.display = "block";
-      prevButton.addEventListener("click", () => navigatePokemon(pokemon.id, -1));
-    }
-  
-    if (currentIndex === allPokemons.length - 1) {
-      nextButton.style.display = "none";
-    } else {
-      nextButton.style.display = "block";
-      nextButton.addEventListener("click", () => navigatePokemon(pokemon.id, 1));
-    }
-  }
-  
-  function navigatePokemon(currentId, direction) {
-    const currentIndex = allPokemons.findIndex(pokemon => pokemon.pokemon.id == currentId);
-    const newIndex = (currentIndex + direction + allPokemons.length) % allPokemons.length;
-    const newPokemonID = allPokemons[newIndex].pokemon.id;
-  
-    fetchPokemonDataBeforeRedirect(newPokemonID).then(data => {
-      if (data) {
-        openOverlay(data.pokemon, data.pokemonSpecies);
-      }
-    });
-  }
+  const pokemonType = pokemon.types[0].type.name;
+  const pokemonName = capitalizeFirstLetter(pokemon.name);
+  const pokemonTypes = pokemon.types.map(typeInfo => typeInfo.type.name);
 
-  function debounce(func, delay) {
-    let timeout;
-    return function(...args) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), delay);
-    };
-  }
+  overlayContent.innerHTML = generateOverlayContent(pokemon, pokemonName, pokemonTypes);
 
-  function handleSearch() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const notification = document.getElementById("notification");
-  
-    if (searchTerm.length < 3) {
-      notification.style.display = "block";
-      displayPokemons(allPokemons);
-      return;
-    } else {
-      notification.style.display = "none";
-    }
-  
-    const filteredPokemons = allPokemons.filter(pokemon => {
-      const pokemonID = pokemon.pokemon.id.toString();
-      const pokemonName = pokemon.pokemon.name.toLowerCase();
-      return pokemonID.includes(searchTerm) || pokemonName.includes(searchTerm);
-    });
-    displayPokemons(filteredPokemons);
+  overlay.style.display = "flex";
+  setupOverlayButtons(pokemon);
+}
+
+function generateOverlayContent(pokemon, pokemonName, pokemonTypes) {
+  return `
+    <span class="close-btn">&times;</span>
+    <h2>${pokemonName}</h2>
+    <div class="img-wrap">
+      <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemon.id}.svg" alt="${pokemon.name}" />
+    </div>
+    ${createTypeBadges(pokemonTypes)}
+    ${createProgressBar("HP", pokemon.stats[0].base_stat)}
+    ${createProgressBar("Attack", pokemon.stats[1].base_stat)}
+    ${createProgressBar("Defense", pokemon.stats[2].base_stat)}
+    <br>
+    <br>
+    <button class="prev-btn">&larr;</button>
+    <button class="next-btn">&rarr;</button>
+  `;
+}
+
+function createTypeBadges(pokemonTypes) {
+  return `
+    <div class="type-wrap">
+      ${pokemonTypes.map(createTypeBadge).join(' ')}
+    </div>
+  `;
+}
+
+function createTypeBadge(type) {
+  return `<span class="badge" style="background-color: ${typeColors[type]};">${type}</span>`;
+}
+
+function createProgressBar(label, value) {
+  return `
+    <p class="progress-header">${label}: ${value}</p>
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" style="width: ${value}%" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100">${value}</div>
+    </div>
+  `;
+}
+
+function setupOverlayButtons(pokemon) {
+  const closeButton = overlayContent.querySelector(".close-btn");
+  closeButton.addEventListener("click", () => overlay.style.display = "none");
+
+  const prevButton = overlayContent.querySelector(".prev-btn");
+  const nextButton = overlayContent.querySelector(".next-btn");
+
+  const currentIndex = allPokemons.findIndex(p => p.pokemon.id == pokemon.id);
+
+  setupPrevButton(prevButton, currentIndex, pokemon.id);
+  setupNextButton(nextButton, currentIndex, pokemon.id);
+}
+
+function setupPrevButton(prevButton, currentIndex, pokemonId) {
+  if (currentIndex === 0) {
+    prevButton.style.display = "none";
+  } else {
+    prevButton.style.display = "block";
+    prevButton.addEventListener("click", () => navigatePokemon(pokemonId, -1));
   }
-  
-  const debouncedHandleSearch = debounce(handleSearch, 300);
-  
-  searchInput.addEventListener("keyup", debouncedHandleSearch);
-  
-  const closeButton = document.querySelector(".search-close-icon");
-  closeButton.addEventListener("click", clearSearch);
-  
-  function clearSearch() {
-    searchInput.value = "";
+}
+
+function setupNextButton(nextButton, currentIndex, pokemonId) {
+  if (currentIndex === allPokemons.length - 1) {
+    nextButton.style.display = "none";
+  } else {
+    nextButton.style.display = "block";
+    nextButton.addEventListener("click", () => navigatePokemon(pokemonId, 1));
+  }
+}
+
+function navigatePokemon(currentId, direction) {
+  const currentIndex = allPokemons.findIndex(pokemon => pokemon.pokemon.id == currentId);
+  const newIndex = (currentIndex + direction + allPokemons.length) % allPokemons.length;
+  const newPokemonID = allPokemons[newIndex].pokemon.id;
+
+  fetchPokemonDataBeforeRedirect(newPokemonID).then(data => {
+    if (data) {
+      openOverlay(data.pokemon, data.pokemonSpecies);
+    }
+  });
+}
+
+function debounce(func, delay) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
+function handleSearch() {
+  const searchTerm = searchInput.value.toUpperCase();
+  const notification = document.getElementById("notification");
+
+  if (searchTerm.length < 3) {
+    notification.style.display = "block";
     displayPokemons(allPokemons);
-    document.getElementById("notification").style.display = "none";
+    return;
+  } else {
+    notification.style.display = "none";
   }
+
+  const filteredPokemons = filterPokemons(searchTerm);
+  displayPokemons(filteredPokemons);
+}
+
+function filterPokemons(searchTerm) {
+  return allPokemons.filter(pokemon => {
+    const pokemonID = pokemon.pokemon.id.toString();
+    const pokemonName = pokemon.pokemon.name.toUpperCase();
+    return pokemonID.includes(searchTerm) || pokemonName.includes(searchTerm);
+  });
+}
+
+const debouncedHandleSearch = debounce(handleSearch, 300);
+searchInput.addEventListener("keyup", debouncedHandleSearch);
+
+const closeButton = document.querySelector(".search-close-icon");
+closeButton.addEventListener("click", clearSearch);
+
+function clearSearch() {
+  searchInput.value = "";
+  displayPokemons(allPokemons);
+  document.getElementById("notification").style.display = "none";
+}
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
