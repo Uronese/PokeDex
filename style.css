@@ -265,6 +265,18 @@ body {
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+  margin: 0.5rem;
+}
+
+
+.list-item:hover .img-wrap img {
+  transform: scale(1.2);
+}
+
+.list-item .img-wrap img {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
 }
 
 .list-item .number-wrap {
@@ -317,6 +329,7 @@ body {
   box-sizing: border-box; 
   display: flex;
   flex-direction: column;
+
 }
 
 .overlay-content .img-wrap {
@@ -378,3 +391,37 @@ body {
   margin-top: 1.5rem;
   margin-bottom: 10px;
 }
+
+.list-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.load-more-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 20px;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.load-more-btn:hover {
+  background-color: #0056b3;
+}
+
+.list-items-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.load-more-button-container {
+  display: flex;
+  justify-content: center;
+}
+
