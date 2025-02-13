@@ -355,6 +355,12 @@ body {
   cursor: pointer;
 }
 
+@media (max-height: 670px) {
+  .overlay-content {
+    max-height: 500px;
+  }
+}
+
 .badge {
   display: inline-block;
   padding: 4px 8px;

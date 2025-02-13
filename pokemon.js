@@ -138,6 +138,11 @@ function openOverlay(pokemon, pokemonSpecies) {
   overlayContent.style.backgroundColor = typeColors[pokemonType];
   overlay.style.display = "flex";
   setupOverlayButtons(pokemon);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) {
+      overlay.style.display = "none";
+    }
+  });
 }
 
 function generateOverlayContent(pokemon, pokemonName, pokemonTypes) {
