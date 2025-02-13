@@ -135,6 +135,7 @@ function openOverlay(pokemon, pokemonSpecies) {
   const pokemonName = capitalizeFirstLetter(pokemon.name);
   const pokemonTypes = pokemon.types.map(typeInfo => typeInfo.type.name);
   overlayContent.innerHTML = generateOverlayContent(pokemon, pokemonName, pokemonTypes);
+  overlayContent.style.backgroundColor = typeColors[pokemonType];
   overlay.style.display = "flex";
   setupOverlayButtons(pokemon);
 }
