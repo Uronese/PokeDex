@@ -88,6 +88,8 @@ function createPokemonListItem(data, container) {
   listItem.className = "list-item";
   const pokemonTypes = data.pokemonTypes;
   const pokemonName = capitalizeFirstLetter(data.pokemon.name);
+  const firstType = pokemonTypes[0];
+  listItem.style.backgroundColor = typeColors[firstType];
   listItem.innerHTML = generatePokemonListItemHTML(pokemonID, pokemonName, pokemonTypes, data.pokemon.name);
   listItem.addEventListener("click", () => openOverlay(data.pokemon, data.pokemonSpecies));
   container.appendChild(listItem);
